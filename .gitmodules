@@ -1,0 +1,3 @@
+[submodule "vendor/fsst"]
+	path = vendor/fsst
+	url = https://github.com/cwida/fsst.git
