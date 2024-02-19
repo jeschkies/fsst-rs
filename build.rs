@@ -1,7 +1,8 @@
-use cc::Build;
-use std::path::Path;
+//use cc::Build;
+//use std::path::Path;
 
 fn main() {
+    /*
     let fsst = Path::new("vendor/fsst");
 
     Build::new()
@@ -27,4 +28,7 @@ fn main() {
         .flag("-c")
         .file(fsst.join("libfsst.cpp"))
         .compile("libfsst")
+    */
+    println!("cargo:rustc-link-search=.");
+    println!("cargo:rustc-link-lib=fsst");
 }
