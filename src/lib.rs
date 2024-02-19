@@ -7,12 +7,13 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let input = CString::new("foobar").unwrap();
 
         unsafe {
-            let mut len = 6 as usize;
-            let _ = fsst::fsst_create(1, &mut len as *mut usize, input.as_ptr() as *mut *mut u8, 0);
+            let mut inputs = vec![CString::new("Hello").unwrap()];
+
+            let mut lengths = vec![5];
+
+            let _ = fsst::fsst_create(1, lengths.as_mut_ptr(), inputs.as_mut_ptr() as *mut *mut u8, 1);
         }
-        //assert_eq!(result, 4);
     }
 }
