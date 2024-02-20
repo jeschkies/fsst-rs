@@ -7,8 +7,9 @@ mod tests {
     #[test]
     fn it_works() {
         unsafe {
-            let mut inputs = vec![CString::new("Hello").unwrap()];
-            let mut lengths = vec![5];
+            let example = "https://github.com/cwida/fsst/tree/master".to_string();
+            let mut lengths = vec![example.len()];
+            let mut inputs = vec![CString::new(example).unwrap()];
 
             let encoder = fsst::fsst_create(
                 1,
@@ -17,8 +18,9 @@ mod tests {
                 1,
             );
 
-            let mut inputs_b = vec![CString::new("Hello").unwrap()];
-            let mut lengths_b = vec![5];
+            let test = "https://github.com/cwida/fsst/tree/master".to_string();
+            let mut lengths_b = vec![test.len()];
+            let mut inputs_b = vec![CString::new(test).unwrap()];
 
             let outsize = 128;
             // TODO: figure how out is used.
