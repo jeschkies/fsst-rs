@@ -140,86 +140,14 @@ fsst_compress(
 );
 
 /* Decompress a single string, inlined for speed. */
-inline size_t /* OUT: bytesize of the decompressed string. If > size, the decoded output is truncated to size. */
+size_t /* OUT: bytesize of the decompressed string. If > size, the decoded output is truncated to size. */
 fsst_decompress(
    fsst_decoder_t *decoder,  /* IN: use this symbol table for compression. */
    size_t lenIn,             /* IN: byte-length of compressed string. */
    unsigned char *strIn,     /* IN: compressed string. */
    size_t size,              /* IN: byte-length of output buffer. */
    unsigned char *output     /* OUT: memory buffer to put the decompressed string in. */
-) {
-   unsigned char*__restrict__ len = (unsigned char* __restrict__) decoder->len;
-   unsigned char*__restrict__ strOut = (unsigned char* __restrict__) output;
-   unsigned long long*__restrict__ symbol = (unsigned long long* __restrict__) decoder->symbol; 
-   size_t code, posOut = 0, posIn = 0;
-#ifndef FSST_MUST_ALIGN /* defining on platforms that require aligned memory access may help their performance */
-#define FSST_UNALIGNED_STORE(dst,src) memcpy((unsigned long long*) (dst), &(src), sizeof(unsigned long long))
-#if defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
-   while (posOut+32 <= size && posIn+4 <= lenIn) {
-      unsigned int nextBlock, escapeMask;
-      memcpy(&nextBlock, strIn+posIn, sizeof(unsigned int));
-      escapeMask = (nextBlock&0x80808080u)&((((~nextBlock)&0x7F7F7F7Fu)+0x7F7F7F7Fu)^0x80808080u);
-      if (escapeMask == 0) {
-         code = strIn[posIn++]; FSST_UNALIGNED_STORE(strOut+posOut, symbol[code]); posOut += len[code]; 
-         code = strIn[posIn++]; FSST_UNALIGNED_STORE(strOut+posOut, symbol[code]); posOut += len[code]; 
-         code = strIn[posIn++]; FSST_UNALIGNED_STORE(strOut+posOut, symbol[code]); posOut += len[code]; 
-         code = strIn[posIn++]; FSST_UNALIGNED_STORE(strOut+posOut, symbol[code]); posOut += len[code]; 
-     } else { 
-         unsigned long firstEscapePos=__builtin_ctzl((unsigned long long) escapeMask)>>3;
-         switch(firstEscapePos) { /* Duff's device */
-         case 3: code = strIn[posIn++]; FSST_UNALIGNED_STORE(strOut+posOut, symbol[code]); posOut += len[code];
-                 // fall through
-         case 2: code = strIn[posIn++]; FSST_UNALIGNED_STORE(strOut+posOut, symbol[code]); posOut += len[code];
-                 // fall through
-         case 1: code = strIn[posIn++]; FSST_UNALIGNED_STORE(strOut+posOut, symbol[code]); posOut += len[code];
-                 // fall through
-         case 0: posIn+=2; strOut[posOut++] = strIn[posIn-1]; /* decompress an escaped byte */
-         }
-      }
-   }
-   if (posOut+24 <= size) { // handle the possibly 3 last bytes without a loop
-      if (posIn+2 <= lenIn) { 
-	 strOut[posOut] = strIn[posIn+1]; 
-         if (strIn[posIn] != FSST_ESC) {
-            code = strIn[posIn++]; FSST_UNALIGNED_STORE(strOut+posOut, symbol[code]); posOut += len[code]; 
-            if (strIn[posIn] != FSST_ESC) {
-               code = strIn[posIn++]; FSST_UNALIGNED_STORE(strOut+posOut, symbol[code]); posOut += len[code]; 
-            } else { 
-               posIn += 2; strOut[posOut++] = strIn[posIn-1]; 
-            }
-         } else {
-            posIn += 2; posOut++; 
-         } 
-      }
-      if (posIn < lenIn) { // last code cannot be an escape
-         code = strIn[posIn++]; FSST_UNALIGNED_STORE(strOut+posOut, symbol[code]); posOut += len[code]; 
-      }
-   }
-#else
-   while (posOut+8 <= size && posIn < lenIn)
-      if ((code = strIn[posIn++]) < FSST_ESC) { /* symbol compressed as code? */
-         FSST_UNALIGNED_STORE(strOut+posOut, symbol[code]); /* unaligned memory write */
-         posOut += len[code];
-      } else { 
-         strOut[posOut] = strIn[posIn]; /* decompress an escaped byte */
-         posIn++; posOut++; 
-      }
-#endif
-#endif
-   while (posIn < lenIn)
-      if ((code = strIn[posIn++]) < FSST_ESC) {
-         size_t posWrite = posOut, endWrite = posOut + len[code];
-         unsigned char* __restrict__ symbolPointer = ((unsigned char* __restrict__) &symbol[code]) - posWrite;
-         if ((posOut = endWrite) > size) endWrite = size;
-         for(; posWrite < endWrite; posWrite++)  /* only write if there is room */
-            strOut[posWrite] = symbolPointer[posWrite];
-      } else {
-         if (posOut < size) strOut[posOut] = strIn[posIn]; /* idem */
-         posIn++; posOut++; 
-      } 
-   if (posOut >= size && (decoder->zeroTerminated&1)) strOut[size-1] = 0;
-   return posOut; /* full size of decompressed string (could be >size, then the actually decompressed part) */
-}
+);
 
 #ifdef __cplusplus
 }
