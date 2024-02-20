@@ -74,6 +74,9 @@ extern "C" {
     ) -> *mut FsstEncoderT;
 }
 extern "C" {
+    pub fn fsst_destroy(arg1: *mut FsstEncoderT);
+}
+extern "C" {
     /// Arguments
     /// fsst_encoder_t *encoder, /* IN: encoder obtained from fsst_create(). */
     /// size_t nstrings,         /* IN: number of strings in batch to compress. */
@@ -83,6 +86,8 @@ extern "C" {
     /// unsigned char *output,   /* OUT: memory buffer to put the compressed strings in (one after the other). */
     /// size_t lenOut[],         /* OUT: byte-lengths of the compressed strings. */
     /// unsigned char *strOut[]  /* OUT: output string start pointers. Will all point into [output,output+size). */
+    ///
+    /// Returns the number of compressed strings (<=n) that fit the output buffer
     #[allow(dead_code)]
     pub fn fsst_compress(
         encoder: *mut FsstEncoderT,
@@ -96,9 +101,17 @@ extern "C" {
     ) -> usize;
 }
 extern "C" {
+    /// Arguments
+    /// fsst_decoder_t *decoder,  /* IN: use this symbol table for compression. */
+    /// size_t lenIn,             /* IN: byte-length of compressed string. */
+    /// unsigned char *strIn,     /* IN: compressed string. */
+    /// size_t size,              /* IN: byte-length of output buffer. */
+    /// unsigned char *output     /* OUT: memory buffer to put the decompressed string in. */
+    ///
+    /// Returns bytesize of the decompressed string. If > size, the decoded output is truncated to size.
     #[allow(dead_code)]
     pub fn fsst_decompress(
-        decoder: *mut FsstFecoderT,
+        decoder: *mut FsstEncoderT,
         lenIn: usize,
         strIn: *mut ::std::os::raw::c_uchar,
         size: usize,
