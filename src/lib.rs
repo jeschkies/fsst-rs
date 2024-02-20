@@ -26,7 +26,7 @@ mod tests {
             // TODO: figure how out is used.
             let mut out = Vec::with_capacity(outsize);
             let mut out_lengths = Vec::with_capacity(1);
-            let mut out_strs = Vec::<CString>::with_capacity(1);
+            let mut compressed_strs = Vec::<CString>::with_capacity(1);
             let n_strings = fsst::fsst_compress(
                 encoder,
                 1,
@@ -35,16 +35,16 @@ mod tests {
                 outsize,
                 out.as_mut_ptr() as *mut u8,
                 out_lengths.as_mut_ptr() as *mut usize,
-                out_strs.as_mut_ptr() as *mut *mut u8,
+                compressed_strs.as_mut_ptr() as *mut *mut u8,
             );
 
             std::mem::forget(out); // prevents double free
             assert_eq!(n_strings, 1, "not all strings have been compressed.");
 
-            assert_eq!(out_strs.len(), 1);
+            assert_eq!(compressed_strs.len(), 1, "unexpected number of compressed strings");
             //assert_eq!(out_lengths.len(), out_strs.len());
             //for it in out_lengths.iter().zip(out_strs.iter()) {
-            for it in out_strs.iter() {
+            for it in compressed_strs.iter() {
                 //let (len, string) = it;
                 let string = it;
                 assert_eq!(inputs[0], string.clone());
