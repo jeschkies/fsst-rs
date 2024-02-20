@@ -74,6 +74,7 @@ extern "C" {
     ) -> *mut FsstEncoderT;
 }
 extern "C" {
+    #[allow(dead_code)]
     pub fn fsst_destroy(arg1: *mut FsstEncoderT);
 }
 extern "C" {
